@@ -1,14 +1,132 @@
 import React from 'react';
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, ImageBackground } from 'react-native';
+import { StyleSheet, View, ImageBackground, Pressable, Alert } from 'react-native';
 import bg from './assets/bg.jpeg';
+
 
 export default function App() {
   const [data, setData] = React.useState([
-    ['o', 'o', 'o'],
-    ['o', 'x', 'o'],
-    ['x', 'o', 'x'],
-  ])
+    ['', '', ''],
+    ['', '', ''],
+    ['', '', ''],
+  ]);
+
+  const [turn, setTurn] = React.useState('x');
+
+  const onPress = (indexRow, indexColumn) => {
+    if (data[indexRow][indexColumn] !== '') {
+      Alert.alert('Position is already ocupied');
+      return;
+    }
+
+    setData((map) => {
+
+      const updatedMap = [...map];
+      updatedMap[indexRow][indexColumn] = turn;
+      return updatedMap;
+    })
+
+    setTurn(turn === 'x' ? 'o' : 'x');
+    checkWinningState();
+  }
+
+  const checkWinningState = () => {
+
+    // rows
+    for (let i = 0; i < 3; i++) {
+      const isRowX = data[i].every((cell) => cell === 'x')
+
+      const isRowO = data[i].every((cell) => cell === 'o')
+
+      if (isRowX) {
+        gameWon('x');
+        break;
+      }
+
+      if (isRowO) {
+        gameWon('o');
+        break;
+      }
+    }
+
+    // column
+    for (let j = 0; j < 3; j++) {
+      let isColumnX = true;
+      let isColumnO = true;
+      for (let i = 0; i < 3; i++) {
+        if (data[i][j] !== 'x') {
+          isColumnX = false;
+        }
+        if (data[i][j] !== 'o') {
+          isColumnO = false;
+        }
+      }
+
+      if (isColumnX) {
+        gameWon('x');
+      }
+      if (isColumnO) {
+        gameWon('o');
+      }
+    }
+
+    // Duong cheo
+    let isCroosX = true;
+    let isCroosO = true;
+    let isReverseCrossX = true;
+    let isReverseCrossO = true;
+
+    for (let i = 0; i < 3; i++) {
+
+      if (data[i][i] !== 'x') {
+        isCroosX = false;
+      }
+      if (data[i][i] !== 'o') {
+        isCroosO = false;
+      }
+
+      if (data[i][3 - i - 1] !== 'x') {
+        isReverseCrossX = false;
+      }
+      if (data[i][3 - i - 1] !== 'o') {
+        isReverseCrossO = false;
+      }
+    }
+
+    if (isCroosX) {
+      gameWon('x');
+    }
+
+    if (isCroosO) {
+      gameWon('o');
+    }
+
+    if (isReverseCrossX) {
+      gameWon('x');
+    }
+
+    if (isReverseCrossO) {
+      gameWon('o');
+    }
+
+  }
+
+  const gameWon = (player) => {
+    Alert.alert('Congratulations!!!', `${player} winnnnn`, [
+      {
+        text: 'Restarts',
+        onPress: resetGame
+      }
+    ])
+  }
+
+  const resetGame = () => {
+    setData([
+      ['', '', ''],
+      ['', '', ''],
+      ['', '', ''],
+    ]);
+    setTurn('x');
+  }
 
   return (
     <View style={styles.container}>
@@ -21,8 +139,9 @@ export default function App() {
           }}
         >
           {
-            data.map((row) => (
+            data.map((row, indexRow) => (
               <View
+                key={`row-${indexRow}`}
                 style={{
                   flexDirection: 'row',
                   flex: 1,
@@ -30,17 +149,21 @@ export default function App() {
                 }}
               >
                 {
-                  row.map((cell) => (
-                    <View
+                  row.map((cell, indexColumn) => (
+                    <Pressable
+                      key={`cell-${indexRow}-${indexColumn}`}
                       style={{
                         flex: 1,
                       }}
+
+                      onPress={() => onPress(indexRow, indexColumn)}
                     >
                       {
                         (cell === 'o') && (
                           <View style={styles.circel} />
                         )
                       }
+
 
                       {
                         (cell === 'x') && (
@@ -50,7 +173,7 @@ export default function App() {
                           </View>
                         )
                       }
-                    </View>
+                    </Pressable>
 
                   ))
                 }
